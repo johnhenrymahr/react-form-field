@@ -1,0 +1,14 @@
+node_modules
+
+#dist folder
+dist
+
+#VSCode metadata
+.vscode
+
+# IntelliJ
+.idea
+*.iml
+
+# Mac files
+.DS_Store
