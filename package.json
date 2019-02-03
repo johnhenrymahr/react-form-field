@@ -4,6 +4,9 @@
   "description": "A very simple react form library",
   "main": "index.js",
   "scripts": {
+    "clean": "rm -rf ./dist",
+    "prebuild": "npm run clean",
+    "build": "rollup -c",
     "test": "jest ./src"
   },
   "repository": {
@@ -36,10 +39,14 @@
     "eslint-plugin-react": "^7.12.4",
     "eslint-plugin-standard": "^4.0.0",
     "jest": "^24.0.0",
-    "prettier": "^1.16.4"
+    "prettier": "^1.16.4",
+    "rollup": "^1.1.2",
+    "rollup-plugin-babel": "^4.3.2",
+    "rollup-plugin-node-resolve": "^4.0.0"
   },
   "dependencies": {
     "@babel/polyfill": "^7.2.5",
+    "prop-types": "^15.6.2",
     "react": "^16.7.0",
     "react-dom": "^16.7.0"
   }
