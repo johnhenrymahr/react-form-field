@@ -6,47 +6,50 @@ export class Form extends PureComponent {
     isSubmitting: false
   }
 
-  componentDidMount () {
+  componentDidMount() {
     this._isMounted = true
   }
 
-  componentWillUnmount () {
+  componentWillUnmount() {
     this._isMounted = false
   }
 
-  render () {
+  render() {
     const {
+      children,
       derivedProps,
       isDisabled,
       onSubmit,
       onValidationError,
+      validate,
       ...props
     } = this.props
 
     return (
-      <form
-        { ...props }
-        { ...derivedProps(this.state) }
-        onSubmit={ this.onSubmit }
-      >
-        {
-          React.Children.map(this.props.children, child => {
-            if (child) {
-              if (typeof child.type === 'function' && child.type.name === 'Field') {
-                return React.cloneElement(child, {
-                  autoFill: this.autoFill,
-                  isDisabled: this.props.isDisabled,
-                  registerGetter: this.registerGetter,
-                  registerUpdater: this.registerUpdater,
-                  unregister: this.unregister,
-                  ...this.state
-                })
-              } else {
-                return child
-              }
+      <form {...props} {...derivedProps(this.state)} onSubmit={this.onSubmit}>
+        {React.Children.map(children, child => {
+          if (child) {
+            if (
+              typeof child.type === 'function' &&
+              child.type.name === 'Field'
+            ) {
+              return React.cloneElement(child, {
+                autoFill: this.autoFill,
+                isDisabled: this.props.isDisabled,
+                registerGetter: this.registerGetter,
+                registerUpdater: this.registerUpdater,
+                unregister: this.unregister,
+                validate:
+                  typeof child.props.validate === 'function'
+                    ? child.props.validate
+                    : validate,
+                ...this.state
+              })
+            } else {
+              return child
             }
-          })
-        }
+          }
+        })}
       </form>
     )
   }
@@ -92,15 +95,14 @@ export class Form extends PureComponent {
     })
   }
 
-  getFields () {
-    return Object.entries(this._getters)
-      .map(([name, getter]) => ({
-        name,
-        ...getter()
-      }))
+  getFields() {
+    return Object.entries(this._getters).map(([name, getter]) => ({
+      name,
+      ...getter()
+    }))
   }
 
-  getInvalidFields (fields = []) {
+  getInvalidFields(fields = []) {
     return fields.filter(field => !field.isValid)
   }
 
@@ -129,8 +131,13 @@ Form.defaultProps = {
 }
 
 Form.propTypes = {
+  children: PropTypes.oneOfType([
+    PropTypes.arrayOf(PropTypes.node),
+    PropTypes.node
+  ]).isRequired,
   derivedProps: PropTypes.func,
   isDisabled: PropTypes.bool,
   onSubmit: PropTypes.func,
-  onValidationError: PropTypes.func
+  onValidationError: PropTypes.func,
+  validate: PropTypes.func
 }

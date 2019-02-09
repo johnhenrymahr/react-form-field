@@ -13,7 +13,7 @@ function setup(otherProps = {}, renderer = shallow) {
   const props = {
     onSubmit,
     onValidationError,
-    ...otherProps,
+    ...otherProps
   }
   return renderer(
     <Form {...props}>
@@ -32,14 +32,13 @@ function setup(otherProps = {}, renderer = shallow) {
           />
         )}
       </Field>
-      <Field name="testfill" shouldRegister={false}>
+      <Field name="test-fill" shouldRegister={false}>
         {({ autoFill }) => (
           <a
             href="javascript:void(0)"
             onClick={() => {
               autoFill('test2', 'filled-value')
-            }}
-          >
+            }}>
             click me
           </a>
         )}
@@ -83,7 +82,7 @@ describe('Form spec', () => {
         .getInvalidFields([
           { isValid: true },
           { isValid: false },
-          { isValid: true },
+          { isValid: true }
         ]).length
     ).toEqual(1)
   })
@@ -93,6 +92,40 @@ describe('Form spec', () => {
     wrapper.find('a').simulate('click')
     expect(wrapper.find('.test2').prop('value')).toEqual('filled-value')
   })
+  it('can pass down a validation handler from form to field', () => {
+    const wrapper = setup(
+      {
+        validate: (name, value) => {
+          if (name === 'test2') {
+            return value === 'foobar'
+          }
+          return true
+        }
+      },
+      mount
+    )
+    expect(wrapper.instance()._getters['test2']().isValid).toEqual(false)
+    wrapper
+      .find('input.test2')
+      .simulate('change', { target: { value: 'foobar' } })
+    wrapper.update()
+    expect(wrapper.instance()._getters['test2']().isValid).toEqual(true)
+  })
+  it('does not override a field level validation handler', () => {
+    const wrapper = setup(
+      {
+        validate: (name, value) => {
+          if (name === 'test1') {
+            return value === 'other'
+          }
+          return true
+        }
+      },
+      mount
+    )
+    wrapper.find('.test1').simulate('change', { target: { value: 'foobar' } })
+    expect(wrapper.instance()._getters['test1']().isValid).toEqual(true)
+  })
   it('calls correct handlers based on form validation', async () => {
     const wrapper = setup({}, mount)
     await wrapper.find('form').simulate('submit')
@@ -100,7 +133,7 @@ describe('Form spec', () => {
     expect(onValidationError.mock.calls.length).toEqual(1)
     expect(onValidationError.mock.calls[0][0]).toEqual({
       test1: '',
-      test2: 'fred',
+      test2: 'fred'
     })
     wrapper.update()
     wrapper.find({ name: 'test1' }).setState({ value: 'foobar' })
@@ -109,7 +142,7 @@ describe('Form spec', () => {
     expect(onSubmit.mock.calls.length).toEqual(1)
     expect(onSubmit.mock.calls[0][0]).toEqual({
       test1: 'foobar',
-      test2: 'fred',
+      test2: 'fred'
     })
   })
 })

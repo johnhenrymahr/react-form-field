@@ -4,12 +4,16 @@ import { Field } from './field'
 
 const mockContainer = { updaters: {}, getters: {} }
 const autoFill = jest.fn()
-const registerUpdater = jest.fn((name, updater) => { mockContainer.updaters[name] = updater })
-const registerGetter = jest.fn((name, getter) => { mockContainer.getters[name] = getter })
+const registerUpdater = jest.fn((name, updater) => {
+  mockContainer.updaters[name] = updater
+})
+const registerGetter = jest.fn((name, getter) => {
+  mockContainer.getters[name] = getter
+})
 const unregister = jest.fn()
 const validate = jest.fn((i, v) => v === 'test1')
 
-function setup (otherProps = {}) {
+function setup(otherProps = {}) {
   const props = {
     autoFill,
     name: 'test',
@@ -19,20 +23,24 @@ function setup (otherProps = {}) {
     validate,
     ...otherProps
   }
-  return (shallow(
-    <Field { ...props }>
-      {
-        ({ validateFieldHandler, isValid, isValidated, setFieldValueHandler, value }) => (
-          <input
-            onChange={ setFieldValueHandler }
-            onBlur={ validateFieldHandler }
-            value={ value }
-            aria-invalid={ isValidated && !isValid }
-          />
-        )
-      }
+  return shallow(
+    <Field {...props}>
+      {({
+        validateFieldHandler,
+        isValid,
+        isValidated,
+        setFieldValueHandler,
+        value
+      }) => (
+        <input
+          onChange={setFieldValueHandler}
+          onBlur={validateFieldHandler}
+          value={value}
+          aria-invalid={isValidated && !isValid}
+        />
+      )}
     </Field>
-  ))
+  )
 }
 
 beforeEach(() => {
@@ -73,7 +81,8 @@ describe('Field Component spec', () => {
     expect(wrapper.state()).toEqual({
       isValid: true,
       isValidated: true,
-      value: 'test1'
+      value: 'test1',
+      validationMessage: ''
     })
     expect(wrapper.find('input').prop('aria-invalid')).toEqual(false)
   })
@@ -97,16 +106,33 @@ describe('Field Component spec', () => {
     expect(wrapper.state()).toEqual({
       isValid: false,
       isValidated: true,
-      value: 'test2'
+      value: 'test2',
+      validationMessage: ''
     })
     expect(wrapper.find('input').prop('aria-invalid')).toEqual(true)
   })
+  it('sets state correctly for a invalid input with validation message', async () => {
+    const wrapper = setup({
+      validate: (name, value) => (value === 'test' ? '' : 'Value must be test.')
+    })
+    expect(wrapper.find('input').length).toEqual(1)
+    await wrapper.find('input').simulate('blur', { target: { value: 'test2' } })
+    expect(wrapper.state()).toEqual({
+      isValid: false,
+      isValidated: true,
+      value: 'test2',
+      validationMessage: 'Value must be test.'
+    })
+    expect(wrapper.find('input').prop('aria-invalid')).toEqual(true)
+  })
+
   it('returns props when calling updater directly ', () => {
     setup()
     expect(mockContainer.updaters.test('test1')).toEqual({
       isValid: true,
       name: 'test',
       value: 'test1',
+      validationMessage: ''
     })
   })
   it('returns state when getter is called', async () => {
@@ -115,7 +141,8 @@ describe('Field Component spec', () => {
     expect(mockContainer.getters.test()).toEqual({
       isValid: false,
       isValidated: true,
-      value: 'test2'
+      value: 'test2',
+      validationMessage: ''
     })
   })
   it('calls update field if an initial value is supplied', () => {
@@ -123,16 +150,25 @@ describe('Field Component spec', () => {
     expect(mockContainer.getters.test()).toEqual({
       isValid: false,
       isValidated: true,
-      value: 'test2'
+      value: 'test2',
+      validationMessage: ''
     })
+  })
+  it('passes value through normalizer before setting to state', () => {
+    const wrapper = setup({ normalizer: value => value.toUpperCase() })
+    wrapper.instance().validateFieldHandler({ target: { value: 'test1' } })
+    expect(wrapper.state('value')).toEqual('TEST1')
   })
   it('can set value to state without validation for onChange handlers', async () => {
     const wrapper = setup()
-    await wrapper.find('input').simulate('change', { target: { value: 'test2' } })
+    await wrapper
+      .find('input')
+      .simulate('change', { target: { value: 'test2' } })
     expect(wrapper.state()).toEqual({
       isValid: false,
       isValidated: false,
-      value: 'test2'
+      value: 'test2',
+      validationMessage: ''
     })
   })
   it('passes all the correct props to the child', () => {
@@ -141,20 +177,20 @@ describe('Field Component spec', () => {
       children,
       name: 'otherTest'
     }
-    shallow(<Field { ...props } />)
+    shallow(<Field {...props} />)
     expect(children.mock.calls.length).toEqual(1)
-    expect(Object.keys(children.mock.calls[0][0]))
-      .toEqual([
-        'autoFill',
-        'isDisabled',
-        'isSubmitting',
-        'name',
-        'setFieldValueHandler',
-        'updateField',
-        'validateFieldHandler',
-        'isValid',
-        'isValidated',
-        'value'
-      ])
+    expect(Object.keys(children.mock.calls[0][0])).toEqual([
+      'autoFill',
+      'isDisabled',
+      'isSubmitting',
+      'name',
+      'setFieldValueHandler',
+      'updateField',
+      'validateFieldHandler',
+      'isValid',
+      'isValidated',
+      'value',
+      'validationMessage'
+    ])
   })
 })

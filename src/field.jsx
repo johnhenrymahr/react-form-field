@@ -1,4 +1,4 @@
-import { Component } from 'react'
+import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 
 export class Field extends Component {
@@ -6,6 +6,7 @@ export class Field extends Component {
     isValid: false,
     isValidated: false,
     value: '',
+    validationMessage: ''
   }
 
   componentDidMount() {
@@ -14,7 +15,7 @@ export class Field extends Component {
       name,
       registerGetter,
       registerUpdater,
-      shouldRegister,
+      shouldRegister
     } = this.props
     if (shouldRegister && typeof registerUpdater === 'function') {
       registerUpdater(name, this.updateField)
@@ -45,7 +46,7 @@ export class Field extends Component {
       setFieldValueHandler: this.setFieldValueHandler,
       updateField: this.updateField,
       validateFieldHandler: this.validateFieldHandler,
-      ...this.state,
+      ...this.state
     })
   }
 
@@ -59,26 +60,65 @@ export class Field extends Component {
       isDisabled,
       isSubmitting,
       name,
-      onFieldUpdate,
-      validate,
+      normalizer,
+      onFieldUpdate
     } = this.props
 
-    const isValid =
-      typeof validate === 'function' ? validate(name, value) : true
-    this.setState({ isValidated: true, isValid, value }, () => {
-      onFieldUpdate(
-        {
-          autoFill,
-          isDisabled,
-          isSubmitting,
-          name,
-          updateField: this.updateField,
-          ...this.state,
-        },
-        event
-      )
-    })
-    return { name, isValid, value }
+    const validationResult = this.validate(name, value)
+
+    this.setState(
+      { isValidated: true, value: normalizer(value), ...validationResult },
+      () => {
+        onFieldUpdate(
+          {
+            autoFill,
+            isDisabled,
+            isSubmitting,
+            name,
+            updateField: this.updateField,
+            ...this.state
+          },
+          event
+        )
+      }
+    )
+    return { name, value, ...validationResult }
+  }
+
+  validate(name, value) {
+    const { validate } = this.props
+    if (typeof validate !== 'function') {
+      return {
+        isValid: true,
+        validationMessage: ''
+      }
+    }
+    const result = validate(name, value)
+
+    if (typeof result === 'boolean') {
+      return {
+        isValid: result,
+        validationMessage: ''
+      }
+    }
+    if (typeof result === 'string') {
+      return {
+        isValid: !result.length,
+        validationMessage: result
+      }
+    }
+    if (result === null) {
+      return {
+        isValid: false,
+        validationMessage: ''
+      }
+    }
+    if (React.isValidElement(result)) {
+      return {
+        isValid: true,
+        validationMessage: result
+      }
+    }
   }
 
   /**
@@ -107,9 +147,10 @@ export class Field extends Component {
 Field.defaultProps = {
   isDisabled: false,
   isSubmitting: false,
+  normalizer: value => value,
   shouldRegister: true,
   onFieldUpdate: () => {},
-  valueSelector: event => event.target.value,
+  valueSelector: event => event.target.value
 }
 
 Field.propTypes = {
@@ -119,11 +160,12 @@ Field.propTypes = {
   isDisabled: PropTypes.bool,
   isSubmitting: PropTypes.bool,
   name: PropTypes.string.isRequired,
+  normalizer: PropTypes.func,
   onFieldUpdate: PropTypes.func,
   registerGetter: PropTypes.func,
   registerUpdater: PropTypes.func,
   shouldRegister: PropTypes.bool,
   unregister: PropTypes.func,
   validate: PropTypes.func,
-  valueSelector: PropTypes.func,
+  valueSelector: PropTypes.func
 }
