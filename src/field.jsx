@@ -109,13 +109,13 @@ export class Field extends Component {
     }
     if (result === null) {
       return {
-        isValid: false,
+        isValid: true,
         validationMessage: ''
       }
     }
-    if (React.isValidElement(result)) {
+    if (typeof result === 'function' || React.isValidElement(result)) { 
       return {
-        isValid: true,
+        isValid: false,
         validationMessage: result
       }
     }

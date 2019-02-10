@@ -126,6 +126,65 @@ describe('Field Component spec', () => {
     expect(wrapper.find('input').prop('aria-invalid')).toEqual(true)
   })
 
+  it('sets state correctly for a invalid input using React components', async () => {
+    const errorMessage = () => (
+      <div>
+        Value must be <strong>test</strong>.
+      </div>
+    )
+    const wrapper = setup({
+      validate: (name, value) =>
+        value === 'test'
+          ? null
+          : errorMessage
+    })
+    expect(wrapper.find('input').length).toEqual(1)
+    await wrapper.find('input').simulate('blur', { target: { value: 'test2' } })
+    expect(wrapper.state()).toEqual({
+      isValid: false,
+      isValidated: true,
+      value: 'test2',
+      validationMessage: errorMessage
+    })
+    expect(wrapper.find('input').prop('aria-invalid')).toEqual(true)
+    await wrapper.find('input').simulate('blur', { target: { value: 'test' } })
+    expect(wrapper.state()).toEqual({
+      isValid: true,
+      isValidated: true,
+      value: 'test',
+      validationMessage: ''
+    })
+    expect(wrapper.find('input').prop('aria-invalid')).toEqual(false)
+  })
+
+  it('sets state correctly for a invalid input using React elements', async () => {
+    const errorMessage = () => React.createElement('div', {}, ' Value must be test')
+
+    const wrapper = setup({
+      validate: (name, value) =>
+        value === 'test'
+          ? null
+          : errorMessage
+    })
+    expect(wrapper.find('input').length).toEqual(1)
+    await wrapper.find('input').simulate('blur', { target: { value: 'test2' } })
+    expect(wrapper.state()).toEqual({
+      isValid: false,
+      isValidated: true,
+      value: 'test2',
+      validationMessage: errorMessage
+    })
+    expect(wrapper.find('input').prop('aria-invalid')).toEqual(true)
+    await wrapper.find('input').simulate('blur', { target: { value: 'test' } })
+    expect(wrapper.state()).toEqual({
+      isValid: true,
+      isValidated: true,
+      value: 'test',
+      validationMessage: ''
+    })
+    expect(wrapper.find('input').prop('aria-invalid')).toEqual(false)
+  })
+
   it('returns props when calling updater directly ', () => {
     setup()
     expect(mockContainer.updaters.test('test1')).toEqual({
