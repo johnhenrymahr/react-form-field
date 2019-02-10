@@ -17,5 +17,8 @@
     "react": {
       "version": "detect"
     }
+  },
+  "rules": {
+    "react/display-name": [false]
   }
 }
