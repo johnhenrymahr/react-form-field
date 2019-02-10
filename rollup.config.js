@@ -6,28 +6,28 @@ export default {
   output: [
     {
       file: 'dist/bundle.cjs.js',
-      format: 'cjs',
+      format: 'cjs'
     },
     {
       file: 'dist/bundle.esm.js',
-      format: 'esm',
+      format: 'esm'
     },
     {
       file: 'dist/bundle.umd.js',
       format: 'umd',
-      name: 'formField',
-    },
+      name: 'formField'
+    }
   ],
   plugins: [
     resolve({
       customResolveOptions: {
-        moduleDirectory: 'node_modules',
+        moduleDirectory: 'node_modules'
       },
-      extensions: ['.js', '.json', '.jsx'],
+      extensions: ['.js', '.json', '.jsx']
     }),
     babel({
-      exclude: 'node_modules/**',
-    }),
+      exclude: 'node_modules/**'
+    })
   ],
-  external: ['react', 'react-dom', 'prop-types'],
+  external: ['react', 'react-dom', 'prop-types']
 }
